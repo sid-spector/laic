@@ -1,0 +1,40 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      modsecurity_rules '
+        SecRuleEngine On
+        SecAuditLog /dev/stdout
+        SecAuditLogFormat JSON
+      ';
+  name: cryptpad-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: crypt.##YOUR_HOST##
+    http:
+      paths:
+      - backend:
+          service:
+            name: cryptpad
+            port:
+              number: 3000
+        path: /
+        pathType: Prefix
+  - host: crypt2.##YOUR_HOST##
+    http:
+      paths:
+      - backend:
+          service:
+            name: cryptpad
+            port:
+              number: 3000
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - crypt.##YOUR_HOST##
+    - crypt2.##YOUR_HOST##
+    secretName: cryptpad-certificate

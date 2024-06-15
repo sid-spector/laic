@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: test
+  name: test
+spec:
+  ports:
+  - name: 80-80
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: test
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: test
+  name: test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: test
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources: {}
+status: {}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      modsecurity_rules '
+        SecAuditEngine RelevantOnly
+        SecStatusEngine On
+        SecRequestBodyAccess On
+        SecAuditLog /dev/stdout
+        SecAuditLogType Parallel
+        SecAuditLogFormat JSON
+      ';
+  name: test
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: test.##YOUR_HOST##
+    http:
+      paths:
+      - pathType: Prefix
+        path: /
+        backend:
+          service:
+            name: test
+            port:
+              number: 80
+  tls: 
+  - hosts:
+    - test.##YOUR_HOST##
+    secretName: test

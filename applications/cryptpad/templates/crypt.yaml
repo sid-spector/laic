@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cryptpad
+  labels:
+    app: cryptpad
+spec:
+  serviceName: "cryptpad"
+  replicas: 1
+  minReadySeconds: 10 # by default is 0
+  selector:
+    matchLabels:
+      app: cryptpad
+  template:
+    metadata:
+      labels:
+        app: cryptpad
+    spec:
+      securityContext:
+        fsGroup: 4001
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: cryptpad
+        image: cryptpad/cryptpad:version-5.6.0
+        #image: nginx
+        env:
+        - name: CPAD_MAIN_DOMAIN
+          value: https://crypt.##YOUR_HOST##
+        - name: CPAD_SANDBOX_DOMAIN
+          value: https://crypt2.##YOUR_HOST##
+        - name: CPAD_CONF
+          value: /cryptpad/config/config.js
+        ports:
+        - containerPort: 3000
+        volumeMounts:
+        - name: config-volume
+          mountPath: /cryptpad/config/
+        - name: data-storage
+          mountPath: /storage/
+      volumes:
+      - name: config-volume
+        configMap:
+          # Provide the name of the ConfigMap containing the files you want
+          # to add to the container
+          name: jit
+  volumeClaimTemplates:
+  - metadata:
+      name: data-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+##      storageClassName: do-block-storage-retain
+## NEEDED FOR PROD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: cryptpad
+  name: cryptpad
+spec:
+  ports:
+  - port: 3000
+    protocol: TCP
+    targetPort: 3000
+  selector:
+    app: cryptpad
+  type: ClusterIP
