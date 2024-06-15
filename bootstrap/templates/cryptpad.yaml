@@ -8,7 +8,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: ##YOUR_GIT_REPO##
+    repoURL: gitops
     path: applications/cryptpad
     targetRevision: HEAD
   destination:
