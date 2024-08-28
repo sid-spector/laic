@@ -15,6 +15,7 @@ spec:
               kubernetes.io/metadata.name: ingress-nginx
       ports:
         - port: 3000
+        - port: 8089
     - from:
         - podSelector: {}
   egress:
